@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Enter Button</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: black; /* Couleur de fond noir */
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #button_invisible {
+            position: absolute;
+            width: 50%;
+            height: 30%;
+            background-color: transparent;
+            border-color: transparent;
+            z-index: 99999;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #loading-screen {
+            display: none;
+        }
+        #content {
+            display: none;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+</head>
+<body>
+    <button id="button_invisible">Click Me</button>
+    <div id="loading-screen">
+        <!-- Loader content here -->
+        Loading...
+    </div>
+    <div id="content">
+        <!-- Empty section content here -->
+    </div>
+    <canvas id="background"></canvas> <!-- Canvas pour l'effet de fond -->
+    <script>
+        // Fonction pour cacher le loader et afficher le contenu
+        function hideLoaderAndShowContent() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            // Rediriger vers test.html après avoir cliqué sur le bouton bleu
+            window.location.href = 'test.html';
+        }
+
+        // Initialisation de la scène, de la caméra et du rendu
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Création d'un texte "Enter" en 3D
+        const loader = new THREE.FontLoader();
+        loader.load('https://cdn.jsdelivr.net/npm/three@0.132.2/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+            const geometry = new THREE.TextGeometry('ENTER', {
+                font: font,
+                size: 2,
+                height: 0.1,
+                curveSegments: 12,
+                bevelEnabled: false
+            });
+            const material = new THREE.MeshPhongMaterial({ color: 0xffffff }); // Utilisation de MeshPhongMaterial pour le rendu de la lumière
+            const textMesh = new THREE.Mesh(geometry, material);
+            scene.add(textMesh);
+
+            // Calculer la position pour centrer le texte au milieu de l'écran
+            geometry.computeBoundingBox();
+            const textWidth = geometry.boundingBox.max.x - geometry.boundingBox.min.x;
+            const textHeight = geometry.boundingBox.max.y - geometry.boundingBox.min.y;
+            textMesh.position.set(-textWidth / 2, -textHeight / 2, -5); // Centrer le texte
+
+            // Ajout d'une lumière rouge
+            const redLight = new THREE.PointLight(0xff0000, 1, 10);
+            scene.add(redLight);
+
+            // Positionnement initial de la lumière devant le texte
+            redLight.position.set(-2, 0, -4);
+
+            // Fonction pour mettre à jour la position de la lumière en fonction de la souris
+            function updateLightPosition(event) {
+                const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                // Position de la lumière en fonction de la position de la souris
+                redLight.position.set(mouseX * 5, mouseY * 5, -4);
+            }
+
+            // Capturer les mouvements de la souris pour mettre à jour la position de la lumière
+            document.addEventListener('mousemove', updateLightPosition);
+
+            // Fonction pour gérer le clic sur le bouton
+            function handleClick(event) {
+                console.log('Button clicked'); // Ajout d'une console log pour le débogage
+                hideLoaderAndShowContent();
+                // Désactiver l'écouteur de clic après avoir caché le loader et affiché le contenu
+                document.getElementById('button_invisible').removeEventListener('click', handleClick);
+            }
+
+            // Ajouter un écouteur de clic pour gérer les clics sur le bouton
+            document.getElementById('button_invisible').addEventListener('click', handleClick);
+        });
+
+        // Positionnement de la caméra
+        camera.position.set(0, 0, 5);
+
+        // Fonction d'animation
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rendu de la scène
+            renderer.render(scene, camera);
+        }
+
+        // Lancement de l'animation
+        animate();
+
+        // Effet de fond animé réagissant au mouvement de la souris
+        const canvas = document.getElementById('background');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, 50, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        document.addEventListener('mousemove', drawBackground);
+    </script>
+</body>
+</html>
